@@ -1,0 +1,61 @@
+
+# -----------------------------------------------------------------------------
+# Device Commissioning File
+# Cybus Learn: How to connect and integrate an OPC UA server
+# Url: https://learn.cybus.io/lessons/how-to-connect-and-integrate-an-opcua-server/
+# Author: Marius Schmeding
+# Date: Sep 2018
+# -----------------------------------------------------------------------------
+source:
+  driver: opcua
+  connection:
+    protocol: opc.tcp
+    host: {{ OPC UA Host }}
+    port: {{ OPC UA Port }}
+    username: {{ OPC UA Username }}
+    password: {{ OPC UA Password }}
+  defaults:
+    operation: subscribe
+    samplingInterval: 2000
+target:
+  driver: mqtt
+  defaults:
+    operation: write
+    topicPrefix: cybus/learn
+mappings:
+# -----------------------------------------------------------------------------
+# Server CurrentTime
+- source:
+    browsePath: /0:Objects/0:Server/0:ServerStatus/0:CurrentTime
+  target:
+    topic: server/status/currenttime
+# -----------------------------------------------------------------------------
+# Humidity
+- source:
+    browsePath: /0:Objects/3:BuildingAutomation/3:AirConditioner_1/3:Humidity
+  target:
+    topic: building-automation/airconditioner/1/humidity
+# -----------------------------------------------------------------------------
+# PowerConsumption
+- source:
+    nodeId: ns=3;s=AirConditioner_1.PowerConsumption
+  target:
+    topic: building-automation/airconditioner/1/power-consumption
+# -----------------------------------------------------------------------------
+# Temperature
+- source:
+    nodeId: ns=3;s=AirConditioner_1.Temperature
+  target:
+    topic: building-automation/airconditioner/1/temperature
+# -----------------------------------------------------------------------------
+# Temperature Setpoint
+- source:
+    nodeId: ns=3;s=AirConditioner_1.TemperatureSetPoint
+  target:
+    topic: building-automation/airconditioner/1/temperature
+- source:
+    operation: write
+    nodeId: ns=3;s=AirConditioner_1.TemperatureSetPoint
+  target:
+    operation: subscribe
+    topic: building-automation/airconditioner/1/temperature/set
