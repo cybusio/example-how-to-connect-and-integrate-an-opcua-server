@@ -4,58 +4,121 @@
 # Cybus Learn: How to connect and integrate an OPC UA server
 # Url: https://learn.cybus.io/lessons/how-to-connect-and-integrate-an-opcua-server/
 # Author: Marius Schmeding
-# Date: Sep 2018
+# Date: Jul 2020
 # -----------------------------------------------------------------------------
-source:
-  driver: opcua
-  connection:
-    protocol: opc.tcp
-    host: opcuaserver.com
-    port: 48010
-    username:
-    password:
-  defaults:
-    operation: subscribe
-    samplingInterval: 2000
-target:
-  driver: mqtt
-  defaults:
-    operation: write
-    topicPrefix: cybus/learn
-mappings:
-# -----------------------------------------------------------------------------
-# Server CurrentTime
-- source:
-    browsePath: /0:Objects/0:Server/0:ServerStatus/0:CurrentTime
-  target:
-    topic: server/status/currenttime
-# -----------------------------------------------------------------------------
-# Humidity
-- source:
-    browsePath: /0:Objects/3:BuildingAutomation/3:AirConditioner_1/3:Humidity
-  target:
-    topic: building-automation/airconditioner/1/humidity
-# -----------------------------------------------------------------------------
-# PowerConsumption
-- source:
-    nodeId: ns=3;s=AirConditioner_1.PowerConsumption
-  target:
-    topic: building-automation/airconditioner/1/power-consumption
-# -----------------------------------------------------------------------------
-# Temperature
-- source:
-    nodeId: ns=3;s=AirConditioner_1.Temperature
-  target:
-    topic: building-automation/airconditioner/1/temperature
-# -----------------------------------------------------------------------------
-# Temperature Setpoint
-- source:
-    nodeId: ns=3;s=AirConditioner_1.TemperatureSetPoint
-  target:
-    topic: building-automation/airconditioner/1/temperature
-- source:
-    operation: write
-    nodeId: ns=3;s=AirConditioner_1.TemperatureSetPoint
-  target:
-    operation: subscribe
-    topic: building-automation/airconditioner/1/temperature/set
+
+description: >
+
+  OPC UA Example Commissioning File
+  Cybus Learn - How to connect and integrate an OPC UA server
+  https://learn.cybus.io/lessons/how-to-connect-and-integrate-an-opcua-server/
+
+metadata:
+
+  name: OPC UA Example Commissioning File
+  version: 1.0.1
+  icon: https://www.cybus.io/wp-content/uploads/2019/03/Cybus-logo-Claim-lang.svg
+  provider: cybus
+  homepage: https://www.cybus.io
+
+parameters:
+
+  opcuaHost:
+    type: string
+    description: OPC UA Host
+    default: opcuaserver.com
+
+  opcuaPort:
+    type: integer
+    default: 48010
+
+resources:
+
+  opcuaConnection:
+    type: Cybus::Connection
+    properties:
+      protocol: Opcua
+      connection:
+        host: !ref opcuaHost
+        port: !ref opcuaPort
+        #username: myUsername
+        #password: myPassword
+
+  currentTime:
+    type: Cybus::Endpoint
+    properties:
+      protocol: Opcua
+      connection: !ref opcuaConnection
+      subscribe:
+        nodeId: i=2258
+
+  Humidity:
+    type: Cybus::Endpoint
+    properties:
+      protocol: Opcua
+      connection: !ref opcuaConnection
+      subscribe:
+        nodeId: ns=3;s=AirConditioner_1.Humidity
+        #browsePath: /0:Objects/3:BuildingAutomation/3:AirConditioner_1/3:Humidity
+        
+  PowerConsumption:
+    type: Cybus::Endpoint
+    properties:
+      protocol: Opcua
+      connection: !ref opcuaConnection
+      subscribe:
+        nodeId: ns=3;s=AirConditioner_1.PowerConsumption
+        
+  Temperature:
+    type: Cybus::Endpoint
+    properties:
+      protocol: Opcua
+      connection: !ref opcuaConnection
+      subscribe:
+        nodeId: ns=3;s=AirConditioner_1.Temperature
+        
+  TemperatureSetpointSub:
+    type: Cybus::Endpoint
+    properties:
+      protocol: Opcua
+      connection: !ref opcuaConnection
+      subscribe:
+        nodeId: ns=3;s=AirConditioner_1.TemperatureSetPoint
+
+  TemperatureSetpointWrite:
+    type: Cybus::Endpoint
+    properties:
+      protocol: Opcua
+      connection: !ref opcuaConnection
+      write:
+        nodeId: ns=3;s=AirConditioner_1.TemperatureSetPoint
+        #browsePath: /0:Objects/3:BuildingAutomation/3:AirConditioner_1/3:TemperatureSetPoint
+
+  mapping:
+    type: Cybus::Mapping
+    properties:
+      mappings:
+        - subscribe:
+            endpoint: !ref currentTime
+          publish:
+            topic: !sub 'server/status/currenttime'
+        - subscribe:
+            endpoint: !ref Humidity
+          publish:
+            topic: !sub 'building-automation/airconditioner/1/humidity'
+        - subscribe:
+            endpoint: !ref PowerConsumption
+          publish:
+            topic: !sub 'building-automation/airconditioner/1/power-consumption'
+        - subscribe:
+            endpoint: !ref Temperature
+          publish:
+            topic: !sub 'building-automation/airconditioner/1/temperature'
+        - subscribe:
+            endpoint: !ref TemperatureSetpointSub
+          publish:
+            topic: !sub 'building-automation/airconditioner/1/temperature-setpoint'
+        - subscribe:
+            topic: !sub 'building-automation/airconditioner/1/temperature-setpoint/set'
+          publish:
+            endpoint: !ref TemperatureSetpointWrite
