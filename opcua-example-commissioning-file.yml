@@ -25,11 +25,12 @@ parameters:
 
   opcuaHost:
     type: string
-    description: OPC UA Host
+    description: OPC UA Host Address
     default: opcuaserver.com
 
   opcuaPort:
     type: integer
+    description: OPC UA Host Port
     default: 48010
 
 resources:
